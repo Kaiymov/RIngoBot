@@ -25,7 +25,7 @@ class ProfileStatesGroup(StatesGroup):
 
 async def on_startup(_):
     await bot.send_message(chat_id=5951238761, text="Бот запущен!")
-    await bot.send_message(chat_id=1903059288, text="Мал Бот проснулся!")
+    await bot.send_message(chat_id=1903059288, text="Бот запущен!")
     await start_db()
 
 
@@ -40,17 +40,21 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 async def cmd_pars(message: types.Message):
     await message.answer(text=start_text,
                          reply_markup=get_start())
-    print(message)
     await message.delete()
 
 
 @dp.message_handler(commands=['get_users'])
 async def cmd_get_users(message: types.Message):
-    try:
-        await message.answer(text=get_users())
-        await message.delete()
-    except:
-        await message.answer(text='Нет запросов')
+    admin = (5951238761, 1903059288)
+    if message.from_user.id in admin:
+        try:
+            await message.answer(text=get_users())
+            await message.delete()
+        except:
+            await message.answer(text='Нет запросов')
+    else:
+        await message.answer(text='Только для админ')
+
 
 @dp.message_handler(Text('Конфиденциальность📖'))
 async def cmd_conf(message: types.Message):
@@ -85,7 +89,7 @@ async def cmd_send_info(message: types.Message):
     if message.from_user.id in check_user():
         await message.answer('Вы уже отправили запрос\nДождитесь ответа от менеджера🕙')
     else:
-        await message.reply(text="Давай тогда отправим заявку,\nи мы с вами свяжемся📞\nНазовите свое имя?",
+        await message.reply(text="Давай тогда отправим заявку,\nи мы с вами свяжемся📞\nНазовите своё имя?",
                             reply_markup=save_cancel())
         await ProfileStatesGroup.name.set()
 
@@ -100,7 +104,7 @@ async def check_name(message: types.Message):
 @dp.message_handler(state=ProfileStatesGroup.name)
 async def save_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['name'] = message.text
+        data['name'] = message.text.capitalize()
 
     await message.answer(text='Отправьте ваш номер телефона📱\n'+
                               'Номер должен начинаться с +996')
@@ -116,7 +120,7 @@ async def check_number(message: types.Message):
 # VALIDATOR 13 number
 @dp.message_handler(lambda message: not len(message.text) == 13, state=ProfileStatesGroup.phone_number)
 async def check_number_len(message: types.Message):
-    await message.reply(text='Заполните номер полностью(13 строк )')
+    await message.reply(text='Заполните номер полностью! (13 строк)')
 
 
 # SAVE PHONE NUMBER
@@ -144,7 +148,8 @@ async def save_phone_number(message: types.Message, state: FSMContext):
 async def callback_answer(callback: types.CallbackQuery):
     for key, value in data_question_answer.items():
             if callback.data == f'question_{key}':
-                await callback.message.answer(text=value['answer'])
+                await callback.message.answer(text=f"{value['question']}\n\n"
+                                                   f"{value['answer']}")
                 await callback.answer(text='')
 
 
