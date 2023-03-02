@@ -11,8 +11,9 @@ import time
 from inline_kb import url_inst, question_answer, data_question_answer
 from reply_kb import *
 from sqlite import *
+from config import TOKEN
 
-bot = Bot(token='TOKEN')
+bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 
