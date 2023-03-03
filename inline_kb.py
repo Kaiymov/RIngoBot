@@ -34,6 +34,6 @@ def question_answer():
 def url_inst():
     ikb = InlineKeyboardMarkup(row_width=1)
     ikb.add(InlineKeyboardButton(text='Instagram',
-                                 url='https://instagram.com/smm_cisproduction?igshid=YmMyMTA2M2Y='))
+                                 url='https://instagram.com/ringo_training?igshid=YmMyMTA2M2Y='))
     return ikb
 
