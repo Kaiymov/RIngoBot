@@ -6,7 +6,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.types import ReplyKeyboardRemove
 
-import time
+import datetime
+import pytz
 
 from inline_kb import url_inst, question_answer, data_question_answer
 from reply_kb import *
@@ -134,11 +135,12 @@ async def save_phone_number(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id=message.from_user.id, text=text_for_user,
                            reply_markup=get_main())
 
-    # TIME NOW
-    time_now = time.strftime('%Y/%m/%d %H:%M')
+    # TIME ZONE BISHKEK
+    utc = datetime.datetime.now(tz=pytz.timezone('Asia/Bishkek'))
+    time_now = utc.strftime('%Y/%m/%d - %H:%M:%S')
     # SAVE DATABASE
     await save_user(message.from_user.id, data['name'], data['phone_number'], time_now)
-
+    # SEND INFO TO ADMIN
     text = f"Имя: {data['name']}\nНомер: {data['phone_number']}\nID: {message.from_user.id}"
     await bot.send_message(chat_id=5951238761, text=text)
     await bot.send_message(chat_id=1903059288, text=text)
