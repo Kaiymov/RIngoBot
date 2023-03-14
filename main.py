@@ -4,15 +4,17 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
-from aiogram.types import ReplyKeyboardRemove
 
 import datetime
 import pytz
 
-from inline_kb import url_inst, question_answer, data_question_answer
-from reply_kb import *
-from sqlite import *
-from config import TOKEN
+from keyboard.inline_kb import *
+from keyboard.reply_kb import *
+from db.sqlite import *
+from config import TOKEN, ADMIN
+from text import start_text, send_request_text, conf_text
+import admin
+
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -24,37 +26,39 @@ class ProfileStatesGroup(StatesGroup):
     phone_number = State()
 
 
+# DELETE USER
+class DeleteUserStateGroup(StatesGroup):
+    user_id = State()
+
+
 async def on_startup(_):
-    await bot.send_message(chat_id=5951238761, text="Бот запущен!")
-    await bot.send_message(chat_id=1903059288, text="Бот запущен!")
+    try:
+        await bot.send_message(chat_id=5951238761, text="Бот запущен!")
+        await bot.send_message(chat_id=1903059288, text="Бот запущен!")
+    except:
+        pass
     await start_db()
 
 
-@dp.message_handler(Text('Прервать отправку🚫'), state='*')
+@dp.message_handler(Text('Прервать🚫'), state='*')
 async def cmd_cancel(message: types.Message, state: FSMContext):
     await state.finish()
-    await message.answer(text='Вы прервали отправку заявку❌',
-                         reply_markup=get_main())
+    if message.from_user.id in ADMIN:
+        await message.answer(text='Вы преввали удаление❌',
+                             reply_markup=admin_table())
+    else:
+        await message.answer(text='Вы прервали отправку заявку❌',
+                             reply_markup=get_main())
 
 
 @dp.message_handler(commands=['start'])
 async def cmd_pars(message: types.Message):
-    await message.answer(text=start_text,
-                         reply_markup=get_start())
-    await message.delete()
-
-
-@dp.message_handler(commands=['get_users'])
-async def cmd_get_users(message: types.Message):
-    admin = (5951238761, 1903059288)
-    if message.from_user.id in admin:
-        try:
-            await message.answer(text=get_users())
-            await message.delete()
-        except:
-            await message.answer(text='Нет запросов')
+    if message.from_user.id in ADMIN:
+        await message.answer('Админка!', reply_markup=admin_table())
     else:
-        await message.answer(text='Только для админ')
+        await message.answer(text=start_text,
+                             reply_markup=get_start())
+        await message.delete()
 
 
 @dp.message_handler(Text('Конфиденциальность📖'))
@@ -87,11 +91,11 @@ async def cmd_request(message: types.Message):
 # SEND INFO USER
 @dp.message_handler(Text('Отправить запрос📨'))
 async def cmd_send_info(message: types.Message):
-    if message.from_user.id in check_user():
+    if message.from_user.id in await check_user_id():
         await message.answer('Вы уже отправили запрос\nДождитесь ответа от менеджера🕙')
     else:
         await message.reply(text="Давай тогда отправим заявку,\nи мы с вами свяжемся📞\nНазовите своё имя?",
-                            reply_markup=save_cancel())
+                            reply_markup=cancel_save())
         await ProfileStatesGroup.name.set()
 
 
@@ -104,12 +108,14 @@ async def check_name(message: types.Message):
 # SAVE NAME
 @dp.message_handler(state=ProfileStatesGroup.name)
 async def save_name(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['name'] = message.text.capitalize()
-
-    await message.answer(text='Отправьте ваш номер телефона📱\n'+
-                              'Номер должен начинаться с +996')
-    await ProfileStatesGroup.next()
+    if not message.text.isalpha():
+        await message.reply(text='Имя должно содержать только буквы!')
+    else:
+        async with state.proxy() as data:
+            data['name'] = message.text.capitalize()
+        await message.answer(text='Отправьте ваш номер телефона📱\n'
+                                  'Номер должен начинаться с +996')
+        await ProfileStatesGroup.next()
 
 
 # VALIDATOR +996
@@ -127,23 +133,29 @@ async def check_number_len(message: types.Message):
 # SAVE PHONE NUMBER
 @dp.message_handler(state=ProfileStatesGroup.phone_number)
 async def save_phone_number(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['phone_number'] = message.text
-        await state.finish()
+    phone = message.text.replace('+', '')
+    if phone.isdigit():
+        async with state.proxy() as data:
+            data['phone_number'] = message.text
+            await state.finish()
 
-    text_for_user = f"Ваши данные сохраненны!📩\nИмя: {data['name']}\n📞: {data['phone_number']}\n"
-    await bot.send_message(chat_id=message.from_user.id, text=text_for_user,
-                           reply_markup=get_main())
+        text_for_user = f"Ваши данные сохраненны!📩\nИмя: {data['name']}\n📞: {data['phone_number']}\n"
+        await bot.send_message(chat_id=message.from_user.id, text=text_for_user,
+                               reply_markup=get_main())
 
-    # TIME ZONE BISHKEK
-    utc = datetime.datetime.now(tz=pytz.timezone('Asia/Bishkek'))
-    time_now = utc.strftime('%Y/%m/%d - %H:%M:%S')
-    # SAVE DATABASE
-    await save_user(message.from_user.id, data['name'], data['phone_number'], time_now)
-    # SEND INFO TO ADMIN
-    text = f"Имя: {data['name']}\nНомер: {data['phone_number']}\nID: {message.from_user.id}"
-    await bot.send_message(chat_id=5951238761, text=text)
-    await bot.send_message(chat_id=1903059288, text=text)
+        # TIME ZONE BISHKEK
+        utc = datetime.datetime.now(tz=pytz.timezone('Asia/Bishkek'))
+        time_now = utc.strftime('%Y/%m/%d - %H:%M')
+        # SAVE DATABASE
+        await save_user(message.from_user.id, data['name'], data['phone_number'], time_now)
+        # SEND INFO TO ADMIN
+        text = f"Имя: {data['name']}\nНомер: {data['phone_number']}\n" \
+               f"<b><u>LINK</u></b>: <a href='tg://user?id={message.from_user.id}'>Ссылка {data['name']}</a>"
+        await bot.send_message(chat_id=5951238761, text=text, parse_mode='HTML')
+        await bot.send_message(chat_id=1903059288, text=text, parse_mode='HTML')
+
+    else:
+        await message.reply('Номер должен состоять из чисел!')
 
 
 @dp.callback_query_handler()
@@ -154,6 +166,9 @@ async def callback_answer(callback: types.CallbackQuery):
                                                    f"{value['answer']}")
                 await callback.answer(text='')
 
+
+# ADMIN
+admin.admin_handler(dp)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
