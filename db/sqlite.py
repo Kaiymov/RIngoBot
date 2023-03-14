@@ -57,6 +57,6 @@ async def get_users():
                       f'<b>Имя</b>: {name}\n'
                       f'📞: {phone_number}\n'
                       f'🕘: {date}\n'
-                      f'<b><u>LINK</u></b>: <a href="tg://user?id={user_id}">Ссылка {name}</a>' for id, user_id, name, phone_number, date in users])
+                      f'<b><u>LINK</u></b>: <a href="tg://user?id={user_id}">Ссылка {name}</a>\n' for id, user_id, name, phone_number, date in users])
 
 
