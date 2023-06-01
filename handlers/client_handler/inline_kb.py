@@ -14,12 +14,6 @@ def question_answer():
 
 def url_inst():
     ikb = InlineKeyboardMarkup(row_width=1)
-    ikb.add(InlineKeyboardButton(text='Instagram',
-                                 url='https://instagram.com/ringo_training?igshid=YmMyMTA2M2Y='))
-    return ikb
-
-
-def yes_no_user():
-    ikb = InlineKeyboardMarkup(row_width=2)
-    ikb.add(InlineKeyboardButton(text='Да', callback_data='yes'), InlineKeyboardButton(text='Нет', callback_data='no'))
-    return ikb
+    insta = InlineKeyboardButton(text='Instagram',
+                                 url='https://instagram.com/ringo_training?igshid=YmMyMTA2M2Y=')
+    return ikb.add(insta)

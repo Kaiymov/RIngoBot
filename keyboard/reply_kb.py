@@ -1,5 +1,9 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
+from db.sqlite import DB
+
+db = DB()
+
 
 def get_start():
     rkb = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -13,12 +17,6 @@ def get_back():
     return rkb
 
 
-def get_return():
-    rkb = ReplyKeyboardMarkup(resize_keyboard=True)
-    rkb.add(KeyboardButton('Главная'))
-    return rkb
-
-
 def get_main():
     rkb = ReplyKeyboardMarkup(resize_keyboard=True)
     rkb.add(KeyboardButton('Отправить запрос📨'))
@@ -27,7 +25,7 @@ def get_main():
     return rkb
 
 
-def cancel_save():
+def cancel_kb():
     rkb = ReplyKeyboardMarkup(resize_keyboard=True)
     rkb.add(KeyboardButton('Прервать🚫'))
     return rkb
@@ -35,9 +33,8 @@ def cancel_save():
 
 # ADMIN COMMAND
 def admin_table():
-    rkb = ReplyKeyboardMarkup(resize_keyboard=True)
-    rkb.add(KeyboardButton('/get_users'), KeyboardButton('/delete_user'))
+    count_all = db.get_count_users()
+    rkb = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
+    rkb.add(KeyboardButton('Все 🚻'), KeyboardButton(f'{count_all}'), KeyboardButton('Удалить 🗑'),
+            KeyboardButton('Рассылка 📨'))
     return rkb
-
-
-
