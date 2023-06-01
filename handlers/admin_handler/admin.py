@@ -2,6 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
+from aiogram.utils.exceptions import MessageTextIsEmpty
 
 import html
 import requests
@@ -41,9 +42,9 @@ async def cmd_get_users(message: types.Message):
     users = db.get_users_paginate(page_number)
     await message.delete()
 
-    if users is not None:
+    try:
         await message.answer(text=users, reply_markup=await paginate(page_number))
-    else:
+    except MessageTextIsEmpty:
         await message.answer(text='Нет запросов')
 
 
