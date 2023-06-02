@@ -16,7 +16,7 @@ from dispatcher import dp
 from .custom_func import get_time_request
 
 from .inline_kb import (paginate, send_message_users, yes_no_user, send_users_modify)
-from keyboard.reply_kb import cancel_kb
+from keyboard.reply_kb import cancel_kb, admin_table
 
 db = DB()
 date_time = {}
@@ -44,6 +44,7 @@ async def cmd_get_users(message: types.Message):
 
     try:
         await message.answer(text=users, reply_markup=await paginate(page_number))
+        await message.answer(text='АДМИНКА!', reply_markup=admin_table())
     except MessageTextIsEmpty:
         await message.answer(text='Нет запросов')
 

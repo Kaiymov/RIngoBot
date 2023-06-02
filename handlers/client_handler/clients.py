@@ -36,17 +36,15 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 
 @dp.message_handler(CommandStart(), ChatTypeFilter(chat_type=types.ChatType.PRIVATE))
 async def cmd_pars(message: types.Message):
+    await message.delete()
     if message.from_user.id in ADMIN:
         await message.answer('Админка!', reply_markup=admin_table())
-        await message.delete()
     else:
         if db.get_user(message.from_user.id) is None:
             db.save_user_id(message.from_user.id)
-            await message.delete()
             await message.answer(text=start_text,
                                  reply_markup=get_start())
         else:
-            await message.delete()
             await message.answer(text=start_text,
                                  reply_markup=get_start())
 

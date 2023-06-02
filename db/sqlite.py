@@ -1,4 +1,4 @@
-from config import DB_HOST, DB_NAME, DB_USER, DB_PORT, DB_PASSWORD
+import config
 import psycopg2
 import sqlite3
 
@@ -9,11 +9,11 @@ cursor = conn.cursor()
 
 # DB POSTGRESQL
 class DB:
-    connect = psycopg2.connect(host=DB_HOST,
-                               dbname=DB_NAME,
-                               user=DB_USER,
-                               password=DB_PASSWORD,
-                               port=DB_PORT)
+    connect = psycopg2.connect(host=config.DB_HOST,
+                               dbname=config.DB_NAME,
+                               user=config.DB_USER,
+                               password=config.DB_PASSWORD,
+                               port=config.DB_PORT)
     cursor = connect.cursor()
 
     def close_db(self):
@@ -34,12 +34,12 @@ class DB:
         sql = "SELECT * FROM users WHERE user_id = {};"
         self.cursor.execute(sql.format(user_id))
         user = self.cursor.fetchone()
-
-        return (f'🆔: {user[0]}\n'
-                f'<b>Имя</b>: {user[2]}\n'
-                f'📞: {user[3]}\n'
-                f'🕘: {user[4]}\n'
-                f'<b><u>LINK</u></b>: <a href="tg://user?id={user_id}">Ссылка {user[2]}</a>\n')
+        if user is not None:
+            return (f'🆔: {user[0]}\n'
+                    f'<b>Имя</b>: {user[2]}\n'
+                    f'📞: {user[3]}\n'
+                    f'🕘: {user[4]}\n'
+                    f'<b><u>LINK</u></b>: <a href="tg://user?id={user_id}">Ссылка {user[2]}</a>\n')
 
     def check_request_user(self, user_id):
         sql = "SELECT user_id, check_req FROM users WHERE user_id = {} AND check_req = 'y';"
@@ -100,11 +100,11 @@ class DB:
 
 
 class DataBaseConnect:
-    connect = psycopg2.connect(host=DB_HOST,
-                               dbname=DB_NAME,
-                               user=DB_USER,
-                               password=DB_PASSWORD,
-                               port=DB_PORT)
+    connect = psycopg2.connect(host=config.DB_HOST,
+                               dbname=config.DB_NAME,
+                               user=config.DB_USER,
+                               password=config.DB_PASSWORD,
+                               port=config.DB_PORT)
     cursor = connect.cursor()
 
     def create_db(self):
@@ -124,19 +124,20 @@ class DataBaseConnect:
 
 # RESAVE SQLITE TO PSQL
 def resave_sqlite_to_psql():
-    psql_conn = psycopg2.connect(host=DB_HOST,
-                                 dbname=DB_NAME,
-                                 user=DB_USER,
-                                 password=DB_PASSWORD,
-                                 port=DB_PORT)
+    psql_conn = psycopg2.connect(host=config.DB_HOST,
+                                 dbname=config.DB_NAME,
+                                 user=config.DB_USER,
+                                 password=config.DB_PASSWORD,
+                                 port=config.DB_PORT)
     psql_cursor = psql_conn.cursor()
 
-    users = cursor.execute('SELECT user_id, name, phone_number, date_saved FROM users;').fetchall()
+    psql_cursor.execute('SELECT user_id, name, phone_number, date_saved FROM users;')
+    users = psql_cursor.fetchall()
 
     for user in users:
         psql_cursor.execute("""INSERT INTO users (user_id, name, phone_number, date_saved, check_req)
                             VALUES (%s, %s, %s, %s, 'y')""", user)
-        print('All users saved')
+    print('All users saved')
     psql_conn.commit()
 
     psql_cursor.close()
