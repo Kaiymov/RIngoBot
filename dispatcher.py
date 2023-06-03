@@ -3,7 +3,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 
 import logging
-from config import TOKEN
+from data import TOKEN
 
 bot = Bot(token=TOKEN, parse_mode='HTML')
 Bot.set_current(bot)
