@@ -121,6 +121,8 @@ async def clb_send_add_img(callback: types.CallbackQuery, callback_data: dict, s
     elif callback_data['msg'] == 'send_all':
         users_id = db.get_users_id()
         await callback.message.delete()
+        await callback.message.answer(text='Рассылка сообщений началось♻️\n'
+                                           'Дождитесь обработки', reply_markup=types.ReplyKeyboardRemove())
 
         text_msg = (f"{text}\n\n\n"
                     f"{'Действует до: '+request_time if request_text else ''}")
