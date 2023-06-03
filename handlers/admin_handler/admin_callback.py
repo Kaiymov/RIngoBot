@@ -155,7 +155,7 @@ async def clb_send_add_img(callback: types.CallbackQuery, callback_data: dict, s
                     await bot.send_message(chat_id=user, text=text_msg,
                                            reply_markup=await send_users_inline_btn(state))
 
-            except exceptions.BotBlocked:
+            except (exceptions.BotBlocked, exceptions.ChatNotFound):
                 pass
 
             except exceptions.UserDeactivated:
