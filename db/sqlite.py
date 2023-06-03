@@ -1,4 +1,4 @@
-import config
+from data import DB_PORT, DB_USER, DB_NAME, DB_HOST, DB_PASSWORD
 import psycopg2
 import sqlite3
 
@@ -9,11 +9,11 @@ cursor = conn.cursor()
 
 # DB POSTGRESQL
 class DB:
-    connect = psycopg2.connect(host=config.DB_HOST,
-                               dbname=config.DB_NAME,
-                               user=config.DB_USER,
-                               password=config.DB_PASSWORD,
-                               port=config.DB_PORT)
+    connect = psycopg2.connect(host=DB_HOST,
+                               dbname=DB_NAME,
+                               user=DB_USER,
+                               password=DB_PASSWORD,
+                               port=DB_PORT)
     cursor = connect.cursor()
 
     def close_db(self):
@@ -100,11 +100,11 @@ class DB:
 
 
 class DataBaseConnect:
-    connect = psycopg2.connect(host=config.DB_HOST,
-                               dbname=config.DB_NAME,
-                               user=config.DB_USER,
-                               password=config.DB_PASSWORD,
-                               port=config.DB_PORT)
+    connect = psycopg2.connect(host=DB_HOST,
+                               dbname=DB_NAME,
+                               user=DB_USER,
+                               password=DB_PASSWORD,
+                               port=DB_PORT)
     cursor = connect.cursor()
 
     def create_db(self):
@@ -124,19 +124,20 @@ class DataBaseConnect:
 
 # RESAVE SQLITE TO PSQL
 def resave_sqlite_to_psql():
-    psql_conn = psycopg2.connect(host=config.DB_HOST,
-                                 dbname=config.DB_NAME,
-                                 user=config.DB_USER,
-                                 password=config.DB_PASSWORD,
-                                 port=config.DB_PORT)
+    psql_conn = psycopg2.connect(host=DB_HOST,
+                                 dbname=DB_NAME,
+                                 user=DB_USER,
+                                 password=DB_PASSWORD,
+                                 port=DB_PORT)
     psql_cursor = psql_conn.cursor()
 
-    psql_cursor.execute('SELECT user_id, name, phone_number, date_saved FROM users;')
-    users = psql_cursor.fetchall()
-
-    for user in users:
+    users = cursor.execute('SELECT user_id, name, phone_number, date_saved FROM users;')
+    count = 0
+    for user in users.fetchall():
         psql_cursor.execute("""INSERT INTO users (user_id, name, phone_number, date_saved, check_req)
                             VALUES (%s, %s, %s, %s, 'y')""", user)
+        count += 1
+        print(count)
     print('All users saved')
     psql_conn.commit()
 

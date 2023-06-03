@@ -10,7 +10,7 @@ from .inline_kb import (callback_send_message, callback_delete_user, callback_un
                         callback_request_btn, paginate, send_users_inline, send_users_inline_btn,
                         send_users_modify, send_message_users)
 from keyboard.reply_kb import admin_table
-from config import ADMIN
+from data import ADMIN
 from .custom_func import parse_msg_date, get_time_request
 
 db = DB()

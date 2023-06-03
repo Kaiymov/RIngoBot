@@ -10,7 +10,7 @@ import pytz
 from datetime import datetime
 
 from db.sqlite import DB
-from config import ADMIN
+from data import ADMIN
 from dispatcher import dp
 
 from .custom_func import get_time_request
