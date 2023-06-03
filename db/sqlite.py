@@ -74,7 +74,7 @@ class DB:
             return (f'🆔: {user[0]}\n'
                     f'<b>Имя</b>: {user[2]}\n'
                     f'📞: {user[3]}\n'
-                    f'🕘: {user[4]}\n')
+                    f'<b><u>LINK</u></b>: <a href="tg://user?id={user[1]}">Ссылка {user[2]}</a>\n')
 
     def delete_user(self, id):
         self.cursor.execute("""DELETE FROM users WHERE id = {};""".format(id))
