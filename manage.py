@@ -1,6 +1,6 @@
 from aiogram import executor
 
-from config import ADMIN
+from data import ADMIN
 from dispatcher import bot, dp
 from db.sqlite import DataBaseConnect, DB
 

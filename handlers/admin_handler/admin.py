@@ -10,7 +10,7 @@ import pytz
 from datetime import datetime
 
 from db.sqlite import DB
-from config import ADMIN
+from data import ADMIN
 from dispatcher import dp
 
 from .custom_func import get_time_request
@@ -124,8 +124,8 @@ async def clb_add_text(message: types.Message, state: FSMContext):
         await message.reply(f'<s>{cleaned_text}</s>\n'
                             'Ссылка должна начинаться c <b>(https://, http://)</b>\n'
                             '<b>Повторите ещё!</b>')
-
-    await SendMessageAllUsers.extra_msg.set()
+    else:
+        await SendMessageAllUsers.extra_msg.set()
 
 
 @dp.message_handler(state=SendMessageAllUsers.inline_reqest_text, content_types=['text'])
@@ -164,8 +164,8 @@ async def clb_add_request_text(message: types.Message, state: FSMContext):
     except ValueError:
         await message.reply(text=f'<u>Неправильна раставлена дата!</u>\n\n<s>{message.text}</s>\n'
                                  f'<b>Повторите заново!</b>')
-
-    await SendMessageAllUsers.extra_msg.set()
+    else:
+        await SendMessageAllUsers.extra_msg.set()
 
 
 @dp.message_handler(state=SendMessageAllUsers.extra_msg, content_types='any')
@@ -174,7 +174,7 @@ async def extra_msg_sender(message: types.Message):
 
 
 # DELETE USER-------------------------------------------------------
-@dp.message_handler(state=DeleteUserStateGroup.user_id)
+@dp.message_handler(state=DeleteUserStateGroup.user_id, content_types=['text'])
 async def state_delete_user(message: types.Message, state: FSMContext):
     if message.text.isdigit():
         collumn_id = int(message.text)

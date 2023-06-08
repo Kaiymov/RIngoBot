@@ -10,7 +10,7 @@ from .inline_kb import (callback_send_message, callback_delete_user, callback_un
                         callback_request_btn, paginate, send_users_inline, send_users_inline_btn,
                         send_users_modify, send_message_users)
 from keyboard.reply_kb import admin_table
-from config import ADMIN
+from data import ADMIN
 from .custom_func import parse_msg_date, get_time_request
 
 db = DB()
@@ -123,6 +123,8 @@ async def clb_send_add_img(callback: types.CallbackQuery, callback_data: dict, s
     elif callback_data['msg'] == 'send_all':
         await callback.message.delete()
         users_id = db.get_users_id()
+        await callback.message.answer(text='Рассылка сообщений началось♻️\n'
+                                           'Дождитесь обработки', reply_markup=types.ReplyKeyboardRemove())
 
         text_msg = (f"{text}\n\n\n"
                     f"{'Действует до: '+request_time if request_text else ''}")
@@ -157,7 +159,7 @@ async def clb_send_add_img(callback: types.CallbackQuery, callback_data: dict, s
                     await bot.send_message(chat_id=user, text=text_msg,
                                            reply_markup=await send_users_inline_btn(state))
 
-            except exceptions.BotBlocked:
+            except (exceptions.BotBlocked, exceptions.ChatNotFound):
                 pass
 
             except exceptions.UserDeactivated:

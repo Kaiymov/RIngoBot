@@ -1,16 +1,15 @@
 import logging
-
-import config
+from data import DB_PORT, DB_USER, DB_NAME, DB_HOST, DB_PASSWORD
 import psycopg2
 
 
 # DB POSTGRESQL
 class DB:
-    connect = psycopg2.connect(host=config.DB_HOST,
-                               dbname=config.DB_NAME,
-                               user=config.DB_USER,
-                               password=config.DB_PASSWORD,
-                               port=config.DB_PORT)
+    connect = psycopg2.connect(host=DB_HOST,
+                               dbname=DB_NAME,
+                               user=DB_USER,
+                               password=DB_PASSWORD,
+                               port=DB_PORT)
     cursor = connect.cursor()
 
     def close_db(self):
@@ -76,7 +75,7 @@ class DB:
             return (f'🆔: {user[0]}\n'
                     f'<b>Имя</b>: {user[2]}\n'
                     f'📞: {user[3]}\n'
-                    f'🕘: {user[4]}\n')
+                    f'<b><u>LINK</u></b>: <a href="tg://user?id={user[1]}">Ссылка {user[2]}</a>\n')
 
     def delete_user(self, id):
         self.cursor.execute("""DELETE FROM users WHERE id = {};""".format(id))
@@ -97,11 +96,11 @@ class DB:
 
 
 class DataBaseConnect:
-    connect = psycopg2.connect(host=config.DB_HOST,
-                               dbname=config.DB_NAME,
-                               user=config.DB_USER,
-                               password=config.DB_PASSWORD,
-                               port=config.DB_PORT)
+    connect = psycopg2.connect(host=DB_HOST,
+                               dbname=DB_NAME,
+                               user=DB_USER,
+                               password=DB_PASSWORD,
+                               port=DB_PORT)
     cursor = connect.cursor()
 
     def create_db(self):
