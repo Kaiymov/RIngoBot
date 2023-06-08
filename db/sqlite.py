@@ -1,10 +1,7 @@
+import logging
+
 import config
 import psycopg2
-import sqlite3
-
-
-conn = sqlite3.connect('/home/manas/Desktop/RingoBot/ringo.db')
-cursor = conn.cursor()
 
 
 # DB POSTGRESQL
@@ -116,35 +113,8 @@ class DataBaseConnect:
                                check_req VARCHAR(1) NULL,
                                is_req_discount BOOLEAN NULL,
                                date_saved VARCHAR(20) NULL);""")
-        print('create/connect datebase')
+        logging.basicConfig(format='%(name)s :: %(levelname)-8s :: %(message)s',
+                            level=logging.INFO)
         self.connect.commit()
         self.cursor.close()
         self.connect.close()
-
-
-# RESAVE SQLITE TO PSQL
-def resave_sqlite_to_psql():
-    psql_conn = psycopg2.connect(host=config.DB_HOST,
-                                 dbname=config.DB_NAME,
-                                 user=config.DB_USER,
-                                 password=config.DB_PASSWORD,
-                                 port=config.DB_PORT)
-    psql_cursor = psql_conn.cursor()
-
-    psql_cursor.execute('SELECT user_id, name, phone_number, date_saved FROM users;')
-    users = psql_cursor.fetchall()
-
-    for user in users:
-        psql_cursor.execute("""INSERT INTO users (user_id, name, phone_number, date_saved, check_req)
-                            VALUES (%s, %s, %s, %s, 'y')""", user)
-    print('All users saved')
-    psql_conn.commit()
-
-    psql_cursor.close()
-    psql_conn.close()
-
-    cursor.close()
-    conn.close()
-
-# TODO вызвать resave_sqlite_to_psql() чтобы перенести данные из sqlite в postgresql
-# TODO перезаписапть is_req_dicount на FALSE

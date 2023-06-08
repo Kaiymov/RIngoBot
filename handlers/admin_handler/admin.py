@@ -35,30 +35,28 @@ class SendMessageAllUsers(StatesGroup):
     inline_reqest_text = State()
     timeout = State()
 
+    extra_msg = State()
+
 
 @dp.message_handler(Text('Все 🚻'), chat_id=ADMIN)
 async def cmd_get_users(message: types.Message):
     page_number = 1
     users = db.get_users_paginate(page_number)
-    await message.delete()
 
     try:
         await message.answer(text=users, reply_markup=await paginate(page_number))
-        await message.answer(text='АДМИНКА!', reply_markup=admin_table())
     except MessageTextIsEmpty:
         await message.answer(text='Нет запросов')
 
 
 @dp.message_handler(Text('Удалить 🗑'), chat_id=ADMIN)
 async def cmd_delete_user(message: types.Message):
-    await message.delete()
     await message.answer(text='Укажите <b>ID</b> для удаления👇', reply_markup=cancel_kb())
     await DeleteUserStateGroup.user_id.set()
 
 
 @dp.message_handler(Text('Рассылка 📨'), chat_id=ADMIN)
 async def cmd_send_all(message: types.Message):
-    await message.delete()
     await message.answer(text='Текст для сообщени🔤', reply_markup=cancel_kb())
     await SendMessageAllUsers.text.set()
 
@@ -76,6 +74,8 @@ async def send_text(message: types.Message, state: FSMContext):
     elif not photo:
         await message.answer(text=text, reply_markup=await send_message_users(state))
 
+    await SendMessageAllUsers.extra_msg.set()
+
 
 @dp.message_handler(state=SendMessageAllUsers.photo, content_types=['photo'])
 async def send_img(message: types.Message, state: FSMContext):
@@ -87,19 +87,23 @@ async def send_img(message: types.Message, state: FSMContext):
     await message.answer_photo(photo=data['img'], caption=data['text'],
                                reply_markup=await send_message_users(state))
 
+    await SendMessageAllUsers.extra_msg.set()
+
 
 @dp.message_handler(state=SendMessageAllUsers.inline_text, content_types=['text'])
 async def clb_add_text(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['inline_text'] = message.text
 
-    text = 'Теперь привязка ссылки🔗'
+    text = 'Теперь привязка ссылки к кнопке🔗'
     await message.answer(text=text)
     await SendMessageAllUsers.inline_url.set()
 
 
 @dp.message_handler(state=SendMessageAllUsers.inline_url, content_types=['text'])
 async def clb_add_text(message: types.Message, state: FSMContext):
+    await message.reply(text='Проверяем наличии ссылки <b>('+message.text+')</b>',
+                        disable_web_page_preview=True)
     try:
         requests.get(message.text)
         async with state.proxy() as data:
@@ -120,6 +124,8 @@ async def clb_add_text(message: types.Message, state: FSMContext):
         await message.reply(f'<s>{cleaned_text}</s>\n'
                             'Ссылка должна начинаться c <b>(https://, http://)</b>\n'
                             '<b>Повторите ещё!</b>')
+
+    await SendMessageAllUsers.extra_msg.set()
 
 
 @dp.message_handler(state=SendMessageAllUsers.inline_reqest_text, content_types=['text'])
@@ -158,6 +164,13 @@ async def clb_add_request_text(message: types.Message, state: FSMContext):
     except ValueError:
         await message.reply(text=f'<u>Неправильна раставлена дата!</u>\n\n<s>{message.text}</s>\n'
                                  f'<b>Повторите заново!</b>')
+
+    await SendMessageAllUsers.extra_msg.set()
+
+
+@dp.message_handler(state=SendMessageAllUsers.extra_msg, content_types='any')
+async def extra_msg_sender(message: types.Message):
+    await message.reply(text='<b>Такой объект не допускается!\n\nСперва закончите с рассылкой</b>')
 
 
 # DELETE USER-------------------------------------------------------

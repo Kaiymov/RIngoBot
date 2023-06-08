@@ -19,26 +19,25 @@ db = DB()
 # CALLBACK DELETE USER YES OR NO
 @dp.callback_query_handler(callback_delete_user.filter(), state=DeleteUserStateGroup)
 async def clb_delete(callback: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    await state.finish()
+    await callback.message.delete()
+
     if callback_data['yes_or_no'] == 'yes':
         async with state.proxy() as data:
             user_id = data['id']
 
         db.delete_user(user_id)
-
-        await state.finish()
         await callback.answer(text='Успешно удален', show_alert=True)
-        await callback.message.delete()
-        await callback.message.answer(text='АДМИНКА!', reply_markup=admin_table())
+        await callback.message.answer(text='Админка!!', reply_markup=admin_table())
+
     elif callback_data['yes_or_no'] == 'no':
-        await state.finish()
         await callback.answer(text='Удаление отменена', show_alert=True)
-        await callback.message.delete()
-        await callback.message.answer(text='АДМИНКА!', reply_markup=admin_table())
+        await callback.message.answer(text='Админка!', reply_markup=admin_table())
 
 
 # CALLBACK PAGINATION USERS
 @dp.callback_query_handler(callback_unseen.filter())
-async def clb_pagination(callback: types.CallbackQuery, callback_data: dict, state: FSMContext):
+async def clb_pagination(callback: types.CallbackQuery, callback_data: dict):
     if callback_data['call'] == 'next':
         page_number = int(callback_data['page']) + 1
         users = db.get_users_paginate(page_number)
@@ -54,8 +53,10 @@ async def clb_pagination(callback: types.CallbackQuery, callback_data: dict, sta
                                          reply_markup=await paginate(page_number), parse_mode='HTML')
 
     elif callback_data['call'] == 'close':
-        await state.finish()
-        await callback.message.delete()
+        try:
+            await callback.message.delete()
+        except exceptions.MessageCantBeDeleted:
+            await callback.answer()
 
     elif callback_data['call'] == 'pages':
         await callback.answer()
@@ -72,7 +73,8 @@ async def clb_send_add_img(callback: types.CallbackQuery, callback_data: dict, s
         request_time = data.get('inline_request_time')
 
     if callback_data['msg'] == 'add_photo':
-        await callback.message.edit_text(text='Отправьте фото🖼')
+        await callback.message.delete()
+        await callback.message.answer(text='Отправьте фото🖼')
         await SendMessageAllUsers.photo.set()
 
     elif callback_data['msg'] == 'skip':
@@ -119,8 +121,8 @@ async def clb_send_add_img(callback: types.CallbackQuery, callback_data: dict, s
         await state.finish()
 
     elif callback_data['msg'] == 'send_all':
-        users_id = db.get_users_id()
         await callback.message.delete()
+        users_id = db.get_users_id()
 
         text_msg = (f"{text}\n\n\n"
                     f"{'Действует до: '+request_time if request_text else ''}")
@@ -182,7 +184,10 @@ async def clb_add_inline(callback: types.CallbackQuery, callback_data: dict):
 @dp.callback_query_handler(callback_request_btn.filter())
 async def clb_request_to_admin(callback: types.CallbackQuery, callback_data: dict):
     if callback_data['req_btn'] == 'req_to_admin':
-        data = parse_msg_date(callback.message.text)
+        msg = callback.message.text
+        if msg is None:
+            msg = callback.message.caption
+        data = parse_msg_date(msg)
         desc = data.get('desc')
         time = data.get('time')
 
@@ -190,7 +195,7 @@ async def clb_request_to_admin(callback: types.CallbackQuery, callback_data: dic
         user = db.get_user(callback.from_user.id)
 
         if time_request.days < 0:
-            return await callback.answer(text='К сожалею вы не успели 😭', show_alert=True)
+            return await callback.answer(text='К сожалению вы не успели 😭', show_alert=True)
 
         if db.is_req_discount(callback.from_user.id) is True:
             return await callback.answer(text='Вы уже отправили запрос', show_alert=True)
