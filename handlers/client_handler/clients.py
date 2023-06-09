@@ -1,3 +1,5 @@
+import logging
+
 from dispatcher import dp, bot
 
 from aiogram import types
@@ -44,6 +46,7 @@ async def cmd_pars(message: types.Message):
             db.save_user_id(message.from_user.id)
             await message.answer(text=start_text,
                                  reply_markup=get_start())
+            logging.info(message.from_user.id)
         else:
             await message.answer(text=start_text,
                                  reply_markup=get_start())

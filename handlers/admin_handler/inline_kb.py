@@ -2,8 +2,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 from aiogram.dispatcher import FSMContext
 
-from . import admin
-from .custom_func import get_time_request
 from db.sqlite import DB
 
 db = DB()
@@ -88,8 +86,6 @@ async def send_users_modify(state: FSMContext):
         request_text = data.get('inline_request_text')
         url_text = data.get('inline_text')
 
-    time_out = admin.date_time.get('timeout')
-
     ikb = InlineKeyboardMarkup(row_width=1)
 
     text_req_btn = InlineKeyboardButton(text='Запросочная', callback_data=callback_inline_btn.new(btn='request'))
@@ -99,30 +95,14 @@ async def send_users_modify(state: FSMContext):
 
     menu = (back_btn, cancel_msg)
 
-    if time_out is not None:
-        time_deadline = await get_time_request(time_out)
-
-        if time_deadline.days >= 0 and not url_text:
-            return ikb.add(text_url_btn).row(*menu)
-
-        elif time_deadline.days < 0 and not url_text:
-            return ikb.add(text_req_btn, text_url_btn).row(*menu)
-
-        else:
-            return ikb.row(*menu)
-
+    if request_text and url_text:
+        return ikb.row(*menu)
+    elif not request_text and url_text:
+        return ikb.add(text_req_btn).row(*menu)
+    elif request_text and not url_text:
+        return ikb.add(text_url_btn).row(*menu)
     else:
-        if not request_text and not url_text:
-            return ikb.add(text_req_btn, text_url_btn).row(*menu)
-
-        elif request_text and not url_text:
-            return ikb.add(text_url_btn).row(*menu)
-
-        elif not request_text and url_text:
-            return ikb.add(text_req_btn).row(*menu)
-
-        else:
-            return ikb.row(*menu)
+        return ikb.add(text_req_btn, text_url_btn).row(*menu)
 
 
 async def send_users_inline_btn(state: FSMContext):

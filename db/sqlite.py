@@ -112,8 +112,7 @@ class DataBaseConnect:
                                check_req VARCHAR(1) NULL,
                                is_req_discount BOOLEAN NULL,
                                date_saved VARCHAR(20) NULL);""")
-        logging.basicConfig(format='%(name)s :: %(levelname)-8s :: %(message)s',
-                            level=logging.INFO)
+        logging.info('create/connect DataBase')
         self.connect.commit()
         self.cursor.close()
         self.connect.close()

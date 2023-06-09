@@ -19,7 +19,6 @@ from .inline_kb import (paginate, send_message_users, yes_no_user, send_users_mo
 from keyboard.reply_kb import cancel_kb, admin_table
 
 db = DB()
-date_time = {}
 
 
 # DELETE USER STATE
@@ -121,9 +120,9 @@ async def clb_add_text(message: types.Message, state: FSMContext):
 
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
         cleaned_text = html.escape(message.text)
-        await message.reply(f'<s>{cleaned_text}</s>\n'
-                            'Ссылка должна начинаться c <b>(https://, http://)</b>\n'
-                            '<b>Повторите ещё!</b>')
+        await message.answer(f'Не существует❌: <s>{cleaned_text}</s>\n'
+                             'Ссылка должна начинаться c <b>(https://, http://)</b>\n'
+                             '<b>Повторите ещё!</b>')
     else:
         await SendMessageAllUsers.extra_msg.set()
 
@@ -133,7 +132,8 @@ async def clb_add_request_text(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['inline_request_text'] = message.text
 
-    await message.answer(text=f"Дата пример🗓({datetime.now(tz=pytz.timezone('Asia/Bishkek')).strftime('%d/%m/%Y')})\n"
+    await message.answer(text=f"Дата пример🗓 (дт/мм/гг) -> "
+                              f"({datetime.now(tz=pytz.timezone('Asia/Bishkek')).strftime('%d/%m/%Y')})\n"
                               f"\nДолжно выше указанного\n")
     await SendMessageAllUsers.timeout.set()
 
@@ -146,7 +146,6 @@ async def clb_add_request_text(message: types.Message, state: FSMContext):
             async with state.proxy() as data:
                 photo = data.get('img')
                 data['inline_request_time'] = message.text
-            date_time['timeout'] = message.text
 
             await message.answer(text='Кнопка запроса сохранена✅')
 
@@ -157,6 +156,9 @@ async def clb_add_request_text(message: types.Message, state: FSMContext):
             elif not photo:
                 await message.answer(text=text,
                                      reply_markup=await send_users_modify(state))
+
+            await SendMessageAllUsers.extra_msg.set()
+
         else:
             await message.reply(text=f"Не должен быть ниже или равен\n"
                                      f"{datetime.now(tz=pytz.timezone('Asia/Bishkek')).strftime('%d/%m/%Y')}")
@@ -164,8 +166,6 @@ async def clb_add_request_text(message: types.Message, state: FSMContext):
     except ValueError:
         await message.reply(text=f'<u>Неправильна раставлена дата!</u>\n\n<s>{message.text}</s>\n'
                                  f'<b>Повторите заново!</b>')
-    else:
-        await SendMessageAllUsers.extra_msg.set()
 
 
 @dp.message_handler(state=SendMessageAllUsers.extra_msg, content_types='any')
