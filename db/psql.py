@@ -51,7 +51,7 @@ class DB:
         return [user[0] for user in users]
 
     def get_users_paginate(self, page_number):
-        sql = 'SELECT id, user_id, name, phone_number, date_saved FROM users ORDER BY id LIMIT {} OFFSET {}*{};'
+        sql = 'SELECT id, user_id, name, phone_number, date_saved FROM users ORDER BY id DESC LIMIT {} OFFSET {}*{};'
         self.cursor.execute(sql.format(10, page_number - 1, 10))
 
         users = self.cursor.fetchall()
