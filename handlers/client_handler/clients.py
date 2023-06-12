@@ -12,7 +12,7 @@ import pytz
 
 from handlers.client_handler.inline_kb import *
 from keyboard.reply_kb import *
-from db.sqlite import DB
+from db.psql import DB
 from data import ADMIN
 from text import start_text, send_request_text, conf_text
 

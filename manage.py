@@ -2,7 +2,7 @@ from aiogram import executor
 
 from data import ADMIN
 from dispatcher import bot, dp
-from db.sqlite import DataBaseConnect, DB
+from db.psql import DataBaseConnect, DB
 
 
 import handlers

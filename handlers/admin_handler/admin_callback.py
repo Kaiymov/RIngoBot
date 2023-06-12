@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.utils import exceptions
 
-from db.sqlite import DB
+from db.psql import DB
 
 from .admin import SendMessageAllUsers, DeleteUserStateGroup
 from dispatcher import dp, bot

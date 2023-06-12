@@ -1,6 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-from db.sqlite import DB
+from db.psql import DB
 
 db = DB()
 

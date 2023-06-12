@@ -9,14 +9,14 @@ import requests
 import pytz
 from datetime import datetime
 
-from db.sqlite import DB
+from db.psql import DB
 from data import ADMIN
 from dispatcher import dp
 
 from .custom_func import get_time_request
 
 from .inline_kb import (paginate, send_message_users, yes_no_user, send_users_modify)
-from keyboard.reply_kb import cancel_kb, admin_table
+from keyboard.reply_kb import cancel_kb
 
 db = DB()
 
