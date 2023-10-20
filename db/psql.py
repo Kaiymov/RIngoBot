@@ -1,30 +1,33 @@
 import logging
 from data import DB_PORT, DB_USER, DB_NAME, DB_HOST, DB_PASSWORD
-import psycopg2
-
+from psycopg2 import pool
 
 # DB POSTGRESQL
 class DB:
-    connect = psycopg2.connect(host=DB_HOST,
-                               dbname=DB_NAME,
-                               user=DB_USER,
-                               password=DB_PASSWORD,
-                               port=DB_PORT)
-    cursor = connect.cursor()
+    connection_pool = pool.SimpleConnectionPool(minconn=1,
+                                                maxconn=20,
+                                                host=DB_HOST,
+                                                dbname=DB_NAME,
+                                                user=DB_USER,
+                                                password=DB_PASSWORD,
+                                                port=DB_PORT)
+    
+    conn = connection_pool.getconn()
+    cursor = conn.cursor()
 
     def close_db(self):
         self.cursor.close()
-        self.connect.close()
+        self.connection_pool.putconn(conn=self.conn)
 
     def save_user_id(self, user_id):
         self.cursor.execute("""INSERT INTO users (user_id, check_req, is_req_discount) VALUES ({}, 'n', FALSE)""".format(user_id))
-        self.connect.commit()
+        self.conn.commit()
 
     def update_save_user(self, user_id, name, phone_number, date_saved):
         sql = "UPDATE users SET name='{}', phone_number='{}', date_saved='{}', check_req='y'" \
               "WHERE user_id = {}"
         self.cursor.execute(sql.format(name, phone_number, date_saved, user_id))
-        self.connect.commit()
+        self.conn.commit()
 
     def get_user(self, user_id):
         sql = "SELECT * FROM users WHERE user_id = {};"
@@ -79,15 +82,15 @@ class DB:
 
     def delete_user(self, id):
         self.cursor.execute("""DELETE FROM users WHERE id = {};""".format(id))
-        self.connect.commit()
+        self.conn.commit()
 
     def update_res_discount(self):
         self.cursor.execute('UPDATE users SET is_req_discount = FALSE;')
-        self.connect.commit()
+        self.conn.commit()
 
     def update_req_discount(self, user_id):
         self.cursor.execute('UPDATE users SET is_req_discount = TRUE WHERE user_id = {}'.format(user_id))
-        self.connect.commit()
+        self.conn.commit()
 
     def is_req_discount(self, user_id):
         self.cursor.execute('SELECT is_req_discount FROM users WHERE user_id = {}'.format(user_id))
@@ -96,12 +99,16 @@ class DB:
 
 
 class DataBaseConnect:
-    connect = psycopg2.connect(host=DB_HOST,
-                               dbname=DB_NAME,
-                               user=DB_USER,
-                               password=DB_PASSWORD,
-                               port=DB_PORT)
-    cursor = connect.cursor()
+    connection_pool = pool.SimpleConnectionPool(minconn=1,
+                                                maxconn=20,
+                                                host=DB_HOST,
+                                                dbname=DB_NAME,
+                                                user=DB_USER,
+                                                password=DB_PASSWORD,
+                                                port=DB_PORT)
+    
+    conn = connection_pool.getconn()
+    cursor = conn.cursor()
 
     def create_db(self):
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS users (
@@ -113,6 +120,7 @@ class DataBaseConnect:
                                is_req_discount BOOLEAN NULL,
                                date_saved VARCHAR(20) NULL);""")
         logging.info('create/connect DataBase')
-        self.connect.commit()
+        self.conn.commit()
+
         self.cursor.close()
-        self.connect.close()
+        self.connection_pool.putconn(conn=self.conn)
